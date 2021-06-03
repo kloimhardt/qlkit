@@ -6,13 +6,12 @@
             [qlkit.spec :as spec]
             [clojure.string :as st]))
 
-#?(:clj
-   (defmacro defcomponent* [nam & bodies]
+(defn defcomponent+ [form env nam & bodies]
      "This macro lets you declare a component class. It can contain the sections of state, query, render, component-did-mount and/or component-will-unmount. It will define a name, which can be directly referenced in render functions to embed nested qlkit components."
      (doseq [[nam] bodies]
        (when-not ('#{state query render component-did-mount component-will-unmount component-will-receive-props} nam)
          (throw (ex-info (str "Unknown component member " nam) {}))))
-     `(let [key# (keyword ~(str (:name (:ns &env))) ~(name nam))]
+     `(let [key# (keyword ~(str (:name (:ns env))) ~(name nam))]
         (def ~nam key#)
         (#'add-class key#
                      ~(into {:display-name (name nam)}
@@ -22,7 +21,10 @@
                                  (last more)]
                                 [(keyword nam)
                                  `(fn ~(first more)
-                                    ~@(rest more))])))))))
+                                    ~@(rest more))]))))))
+#?(:clj
+   (defmacro defcomponent* [nam & bodies]
+     (apply defcomponent+ &form &env nam bodies)))
 
 (defn safe-deref [state]
   (let [k #?(:clj (instance? clojure.lang.IDeref state)
