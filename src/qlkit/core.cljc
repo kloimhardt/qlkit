@@ -388,7 +388,7 @@
            
            (defn update-state!* [this fun & args]
              "Update the component-local state with the given function"
-             (.setState this
+             (.setState ^ReactCompositeComponent this ;; added to avoid compiler warnings
                         (fn [state]
                           #js {:state (apply fun
                                              (clj-state state)
